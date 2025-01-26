@@ -1,0 +1,28 @@
+{
+  "name": "notifications",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "host": "npx @11ty/eleventy --serve",
+    "dev": "npx  @tailwindcss/cli -i ./src/css/tailwind.css -o ./src/dist/css/output.css --watch && npx @11ty/eleventy --serve",
+    "build": "npm run build:css && npx @11ty/eleventy",
+    "build:css": "npx  @tailwindcss/cli -i ./src/css/tailwind.css -o ./src/dist/css/output.css --minify",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1"
+  },
+  "dependencies": {
+    "@11ty/eleventy": "^3.0.0",
+    "@tailwindcss/cli": "^4.0.0",
+    "express": "^4.21.2",
+    "notifications": "file:",
+    "tailwindcss": "^4.0.0",
+    "ws": "^8.18.0"
+  }
+}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Tag Game</title>
+    <link href="../dist/css/output.css" rel="stylesheet">
+</head>
+<body class="container text-black bg-gray-700 min-h-screen">
+    
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold text-center mb-6">Group Tag Game</h1>
+    <div class="mb-6">
+        <input
+            type="text"
+            id="username"
+            placeholder="Enter your username"
+            class="border rounded px-3 py-2 w-full mb-4"
+        />
+        <button
+            id="register"
+            class="bg-blue-500 text-white px-4 py-2 rounded w-full hover:bg-blue-600"
+        >
+            Register
+        </button>
+    </div>
+
+    <div class="bg-white shadow-md p-4 rounded">
+        <h3 class="text-lg font-semibold mb-4">Group Members</h3>
+        <div id="user-list" class="space-y-2"></div>
+    </div>
+</div>
+
+<script>
+    const ws = new WebSocket("ws://127.0.0.1:8080/group_tag");
+    let username = "";
+
+    ws.onopen = () => console.log("WebSocket connection established.");
+    ws.onerror = (error) => console.error("WebSocket error:", error);
+
+    window.onload = () => {
+        const savedUsername = localStorage.getItem("username");
+        if (!savedUsername) {
+            alert("You must register a username to connect.");
+        } else if (savedUsername) {
+            username = savedUsername;
+            console.log("Saved username:", savedUsername);
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: "register", username }));
+            } else {
+                console.error("WebSocket not open on load.");
+            }
+        }
+    };
+
+    document.getElementById("register").onclick = () => {
+        username = document.getElementById("username").value.trim();
+        if (!username) {
+            alert("Please enter a username!");
+            return;
+        }
+        console.log("New user:", username);
+        localStorage.setItem("username", username);
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: "register", username }));
+        } else {
+            console.error("WebSocket not open during register.");
+        }
+    };
+
+    ws.onmessage = (event) => {
+        console.log("Message from server:", event.data);
+        const data = JSON.parse(event.data);
+
+        if (data.type === "userListUpdate" && Array.isArray(data.users)) {
+            const userList = document.getElementById("user-list");
+            userList.innerHTML = ""; // Clear existing users
+            data.users.forEach((user) => {
+                const div = document.createElement("div");
+                div.textContent = user;
+                div.className = "cursor-pointer bg-gray-200 p-2 text-black rounded hover:bg-gray-300";
+                div.onclick = () =>
+                    ws.send(JSON.stringify({ type: "tag", username, target: user }));
+                userList.appendChild(div);
+            });
+        } else if (data.type === "notification" && Notification.permission === "granted") {
+            new Notification("Notification", { body: data.message });
+        } else if (data.type === "eleventy.status") {
+        console.log("Eleventy status message received:", data.status);
+        } else {
+            console.error("Unknown message type or invalid data:", data);
+        }
+    };
+
+    // Request notification permission
+    if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+
+</script>
+
+</body>
+</html>
